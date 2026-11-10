@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import plotly.graph_objects as go
 
 # Set page configuration
 st.set_page_config(
@@ -324,23 +323,10 @@ if engine_mode == "Historical Backtest":
     m3.metric("Lowest Balance", f"${lowest_bal:,.0f}")
     m4.metric("Avg Annual Withdrawal", f"${avg_withdrawal:,.0f}")
 
-    # Plot Chart
-    fig = go.Figure()
-    fig.add_trace(go.Scatter(
-        x=df_ledger["Year"], 
-        y=df_ledger["End Total"], 
-        mode='lines+markers', 
-        name=f"Historical Path ({hist_start_year})",
-        line=dict(color='#10b981', width=3)
-    ))
-    fig.update_layout(
-        title="Portfolio Balance Trajectory Over Time",
-        xaxis_title="Simulation Year",
-        yaxis_title="Portfolio Balance ($)",
-        template="plotly_dark",
-        height=450
-    )
-    st.plotly_chart(fig, use_container_width=True)
+    # Plot Chart using Native Streamlit Line Chart
+    st.subheader("Portfolio Balance Trajectory Over Time")
+    chart_data = df_ledger.set_index("Year")[["End Total"]]
+    st.line_chart(chart_data)
 
 else:
     # Monte Carlo Engine
@@ -380,23 +366,10 @@ else:
     m3.metric("10th Percentile Balance", f"${np.percentile(final_bals, 10):,.0f}")
     m4.metric("Avg Sample Withdrawal", f"${df_ledger['Net Drawn'].mean():,.0f}")
 
-    # Plot Sample Trajectories
-    fig = go.Figure()
-    for s in range(min(20, NUM_SIMS)):
-        fig.add_trace(go.Scatter(
-            y=sim_trajectories[s], 
-            mode='lines', 
-            opacity=0.3,
-            showlegend=False
-        ))
-    fig.update_layout(
-        title="Monte Carlo Sample Simulations (20 Trajectories)",
-        xaxis_title="Simulation Year",
-        yaxis_title="Portfolio Balance ($)",
-        template="plotly_dark",
-        height=450
-    )
-    st.plotly_chart(fig, use_container_width=True)
+    # Plot Sample Trajectories using Native Streamlit Line Chart
+    st.subheader("Monte Carlo Sample Simulations (Trajectories)")
+    mc_df = pd.DataFrame(sim_trajectories[:15]).T
+    st.line_chart(mc_df)
 
 # --- DETAILED LEDGER TABLE ---
 st.subheader("📋 Year-by-Year Multi-Account Withdrawal Ledger")
